@@ -741,7 +741,7 @@ class ProtSubstructFuncs:
         for line in ProtSubstructFuncs.load_substructre_smarts_file():
             line = line.strip()
             sub = {}
-            if line is not "":
+            if line != "":
                 splits = line.split()
                 sub["name"] = splits[0]
                 sub["smart"] = splits[1]
@@ -1418,7 +1418,7 @@ def run_with_mol_list(mol_lst, **kwargs):
         props = m.GetPropsAsDict()
         kwargs["smiles"] = Chem.MolToSmiles(m, isomericSmiles=True)
         protonated_smiles_and_props.extend(
-            [(s.split("\t")[0], props) for s in main(kwargs)]
+            [(s.split("\t")[0], props) for s in Protonate(kwargs)]
         )
 
     # Now convert the list of protonated smiles strings back to RDKit Mol

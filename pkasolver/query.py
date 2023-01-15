@@ -22,7 +22,7 @@ from pkasolver.data import (
 )
 from pkasolver.ml import dataset_to_dataloader
 from pkasolver.ml_architecture import GINPairV1
-
+from pkasolver import run_with_mol_list
 
 @dataclass
 class States:
@@ -243,12 +243,12 @@ def calculate_microstate_pka_values(
         query_model = QueryModel()
 
     if only_dimorphite:
-        print(
+        logging.warning(
             "BEWARE! This is experimental and might generate wrong protonation states."
         )
         logger.debug("Using dimorphite-dl to enumerate protonation states.")
-        mol_at_ph_7 = _call_dimorphite_dl(mol, min_ph=7.0, max_ph=7.0, pka_precision=0)
-        all_mols = _call_dimorphite_dl(mol, min_ph=0.5, max_ph=13.5)
+        mol_at_ph_7 = run_with_mol_list([mol], min_ph=7.0, max_ph=7.0, pka_precision=0)
+        all_mols = run_with_mol_list([mol], min_ph=0.5, max_ph=13.5)
         # sort mols
         atom_charges = [
             np.sum([atom.GetTotalNumHs() for atom in mol.GetAtoms()])
@@ -295,10 +295,10 @@ def calculate_microstate_pka_values(
 
     else:
         logger.info("Using dimorphite-dl to identify protonation sites.")
-        mol_at_ph_7 = _call_dimorphite_dl(mol, min_ph=7.0, max_ph=7.0, pka_precision=0)
+        mol_at_ph_7 = run_with_mol_list([mol], min_ph=7.0, max_ph=7.0, pka_precision=0)
         assert len(mol_at_ph_7) == 1
         mol_at_ph_7 = mol_at_ph_7[0]
-        all_mols = _call_dimorphite_dl(mol, min_ph=0.5, max_ph=13.5)
+        all_mols = run_with_mol_list([mol], min_ph=0.5, max_ph=13.5)
 
         # identify protonation sites
         reaction_center_atom_idxs = sorted(
@@ -308,7 +308,7 @@ def calculate_microstate_pka_values(
 
         acids = []
         mol_at_state = deepcopy(mol_at_ph_7)
-        print(f"Proposed mol at pH 7.4: {Chem.MolToSmiles(mol_at_state)}")
+        logger.info(f"Proposed mol at pH 7.4: {Chem.MolToSmiles(mol_at_state)}")
 
         used_reaction_center_atom_idxs = deepcopy(reaction_center_atom_idxs)
         logger.debug("Start with acids ...")
@@ -461,9 +461,9 @@ def calculate_microstate_pka_values(
         mols = _check_for_duplicates(mols)
 
     if len(mols) == 0:
-        print("#########################")
-        print("Could not identify any ionizable group. Aborting.")
-        print("#########################")
+        logging.info("#########################")
+        logging.info("Could not identify any ionizable group. Aborting.")
+        logging.info("#########################")
 
     return mols
 
